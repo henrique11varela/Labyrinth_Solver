@@ -1,8 +1,5 @@
 #include "class/Image.h"
-#include <iostream>
-#include <iomanip>
 #include <string>
-#include <fstream>
 using namespace std;
 /*
 0 - empty
@@ -11,6 +8,8 @@ using namespace std;
 3 - negative
 9 - path
  */
+
+/* Tests and discovers a path */
 int pathFind(int **lab, int w, int h, int x, int y, bool start)
 {
     lab[y][x] = 2; // marks seen
@@ -60,6 +59,7 @@ int pathFind(int **lab, int w, int h, int x, int y, bool start)
     return 3;
 }
 
+/* looks for the entrance */
 int *findEntrance(int **lab, int w, int h)
 {
     int *entrance = new int[2];
@@ -97,10 +97,7 @@ int main(int argc, char const *argv[])
     cout << "Write the path for the png: ";
     char *path;
     cin >> path;
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------
-
     Image img(path); // instance
-
     // img to 2d array
     int counter = 0;
     int **lab = new int *[img.h];
@@ -112,20 +109,16 @@ int main(int argc, char const *argv[])
             lab[i][j] = (img.data[counter++ * img.channels] == 0) ? 1 : 0;
         }
     }
-
     // look for entrance
     int *entrance = findEntrance(lab, img.w, img.h);
-
-    /* pathFind(lab, img.w, img.h, entrance[1], entrance[0], true); */
     if (pathFind(lab, img.w, img.h, entrance[1], entrance[0], true) == 9)
     {
         cout << "Labyrinth solved!!!!\n";
     }
     else
     {
-        cout << "WHACK\n";
+        cout << "Labyrinth not solved...\n";
     }
-
     // Display
     char wall = 219;
     char solv = 178;
@@ -137,9 +130,6 @@ int main(int argc, char const *argv[])
             {
             case 1: // wall
                 cout << wall << wall;
-                break;
-            case 2: // seen
-                cout << "O ";
                 break;
             case 3: // negative
                 cout << "X ";
@@ -154,7 +144,6 @@ int main(int argc, char const *argv[])
         }
         cout << "\n";
     }
-
     // make new data and output
     counter = 0;
     uint8_t *newData = new uint8_t[img.size];
@@ -184,10 +173,9 @@ int main(int argc, char const *argv[])
         }
     }
     img.write("output.png", newData);
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------
-
     cout << "\nThe output is in 'output.png'\n\nGithub: henrique11varela\n\n";
-
+    cout << "Press Enter...";
+    cin.ignore();
+    cin.ignore();
     return 0;
 }
