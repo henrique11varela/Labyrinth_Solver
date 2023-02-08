@@ -1,62 +1,134 @@
 #include "class/Image.h"
+#include <iomanip>
 #include <string>
 using namespace std;
 /*
 0 - empty
 1 - wall
-2 - seen
-3 - negative
 9 - path
- */
+*/
 
-/* Tests and discovers a path */
-int pathFind(int **lab, int w, int h, int x, int y, bool start)
+// Display------------------------------------------------------------------------------------
+void display(int **lab, int w, int h)
 {
-    lab[y][x] = 2; // marks seen
-    if (!start)    // check if end
+    char wall = 219;
+    char solv = 178;
+    for (int i = 0; i < h; i++)
     {
-        if (x == 0 || x == w - 1 || y == 0 || y == h - 1)
+        for (int j = 0; j < w; j++)
         {
-            lab[y][x] = 9;
-            return 9;
+            switch (lab[i][j])
+            {
+            case 1: // wall
+                cout << wall << wall;
+                break;
+            case 9: // path
+                cout << solv << solv;
+                break;
+            default: // empty
+                cout << setw(2) << /* lab[i][j] */ "";
+                break;
+            }
         }
+        cout << "\n";
+    }
+}
+
+/* Finds the last bread crumb and follows it back */
+void pathTrace(int **lab, int w, int h, int x, int y)
+{
+    int value = lab[y][x];
+    lab[y][x] = 9;
+    if (value == 10)
+    {
+        return;
     }
 
-    // check NEWS
-    if (lab[y][x - 1] == 0) // W
+    if (x != 0)
     {
-        if (pathFind(lab, w, h, x - 1, y, false) == 9)
+        if (lab[y][x - 1] == value - 1)
         {
-            lab[y][x] = 9;
-            return 9;
+            pathTrace(lab, w, h, x - 1, y);
         }
     }
-    if (lab[y][x + 1] == 0) // E
+    if (x != w - 1)
     {
-        if (pathFind(lab, w, h, x + 1, y, false) == 9)
+        if (lab[y][x + 1] == value - 1)
         {
-            lab[y][x] = 9;
-            return 9;
+            pathTrace(lab, w, h, x + 1, y);
         }
     }
-    if (lab[y - 1][x] == 0) // N
+    if (y != 0)
     {
-        if (pathFind(lab, w, h, x, y - 1, false) == 9)
+        if (lab[y - 1][x] == value - 1)
         {
-            lab[y][x] = 9;
-            return 9;
+            pathTrace(lab, w, h, x, y - 1);
         }
     }
-    if (lab[y + 1][x] == 0) // S
+    if (y != h - 1)
     {
-        if (pathFind(lab, w, h, x, y + 1, false) == 9)
+        if (lab[y + 1][x] == value - 1)
         {
-            lab[y][x] = 9;
-            return 9;
+            pathTrace(lab, w, h, x, y + 1);
         }
     }
-    lab[y][x] = 3; // marks negative
-    return 3;
+};
+
+/* Tests and discovers a path leaving bread crumbs */
+void pathFind2(int **lab, int w, int h, int x, int y, int distance)
+{
+    lab[y][x] = 10 + distance;
+    if ((x != 0 && x != w - 1 && y != 0 && y != h - 1))
+    {
+
+        if (lab[y][x - 1] == 0 || lab[y][x - 1] > (lab[y][x] + 1))
+        {
+            pathFind2(lab, w, h, x - 1, y, distance + 1);
+        }
+        if (lab[y][x + 1] == 0 || lab[y][x + 1] > (lab[y][x] + 1))
+        {
+            pathFind2(lab, w, h, x + 1, y, distance + 1);
+        }
+        if (lab[y - 1][x] == 0 || lab[y - 1][x] > (lab[y][x] + 1))
+        {
+            pathFind2(lab, w, h, x, y - 1, distance + 1);
+        }
+        if (lab[y + 1][x] == 0 || lab[y + 1][x] > (lab[y][x] + 1))
+        {
+            pathFind2(lab, w, h, x, y + 1, distance + 1);
+        }
+    }
+    else if (distance == 0)
+    {
+        if (x != 0)
+        {
+            if (lab[y][x - 1] == 0 || lab[y][x - 1] > (lab[y][x] + 1))
+            {
+                pathFind2(lab, w, h, x - 1, y, distance + 1);
+            }
+        }
+        if (x != w - 1)
+        {
+            if (lab[y][x + 1] == 0 || lab[y][x + 1] > (lab[y][x] + 1))
+            {
+                pathFind2(lab, w, h, x + 1, y, distance + 1);
+            }
+        }
+        if (y != 0)
+        {
+            if (lab[y - 1][x] == 0 || lab[y - 1][x] > (lab[y][x] + 1))
+            {
+                pathFind2(lab, w, h, x, y - 1, distance + 1);
+            }
+        }
+        if (y != h - 1)
+        {
+            if (lab[y + 1][x] == 0 || lab[y + 1][x] > (lab[y][x] + 1))
+            {
+                pathFind2(lab, w, h, x, y + 1, distance + 1);
+            }
+        }
+    }
 }
 
 /* looks for the entrance */
@@ -111,40 +183,50 @@ int main(int argc, char const *argv[])
     }
     // look for entrance
     int *entrance = findEntrance(lab, img.w, img.h);
-    if (pathFind(lab, img.w, img.h, entrance[1], entrance[0], true) == 9)
+    // Discover Path---------------------------------------------------------------------------------
+    pathFind2(lab, img.w, img.h, entrance[1], entrance[0], 0);
+
+    // Find exit
+    int maior = 0;
+    int maiorPos[2];
+    for (int i = 0; i < img.w; i++)
     {
-        cout << "Labyrinth solved!!!!\n";
-    }
-    else
-    {
-        cout << "Labyrinth not solved...\n";
-    }
-    // Display
-    char wall = 219;
-    char solv = 178;
-    for (int i = 0; i < img.h; i++)
-    {
-        for (int j = 0; j < img.w; j++)
+        if (lab[0][i] > maior)
         {
-            switch (lab[i][j])
-            {
-            case 1: // wall
-                cout << wall << wall;
-                break;
-            case 3: // negative
-                cout << "X ";
-                break;
-            case 9: // path
-                cout << solv << solv;
-                break;
-            default: // empty
-                cout << "  ";
-                break;
-            }
+            maior = lab[0][i];
+            maiorPos[0] = 0;
+            maiorPos[1] = i;
         }
-        cout << "\n";
+        if (lab[i][img.h - 1] > maior)
+        {
+            maior = lab[img.h - 1][i];
+            maiorPos[0] = img.h - 1;
+            maiorPos[1] = i;
+        }
     }
-    // make new data and output
+    for (int i = 1; i < img.h - 1; i++)
+    {
+        if (lab[i][0] > maior)
+        {
+            maior = lab[i][0];
+            maiorPos[0] = i;
+            maiorPos[1] = 0;
+        }
+        if (lab[i][img.h - 1] > maior)
+        {
+            maior = lab[i][img.w - 1];
+            maiorPos[0] = i;
+            maiorPos[1] = img.h - 1;
+        }
+    }
+
+    // Trace Path----------------------------------------------------------------------------
+    pathTrace(lab, img.w, img.h, maiorPos[1], maiorPos[0]);
+
+    // Display------------------------------------------------------------------------------------
+    display(lab, img.w, img.h);
+
+    // make new data and output --------------------------------------------
     counter = 0;
     uint8_t *newData = new uint8_t[img.size];
     for (int i = 0; i < img.h; i++)
