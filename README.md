@@ -6,6 +6,8 @@ The input is a PNG of a labyrinth where **white** is a path and **black** is a w
 
 It outputs the shortest solved path.
 
+Largest file 40x40px
+
 ![](other/screenshot.png)
 
 # What does it do?
